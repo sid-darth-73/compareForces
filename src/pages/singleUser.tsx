@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { type Submission } from "../types/SubmissionType";
 import { SubmissionApi } from "../api/SubmissionApi";
+import { Button } from "../components/ui/Button";
+import { useNavigate } from "react-router-dom";
 
 async function getUser(user: string): Promise<Submission[]> {
     const api = SubmissionApi(user)
@@ -12,7 +14,7 @@ async function getUser(user: string): Promise<Submission[]> {
 export function SingleUser() {
     const [problems,setProblems] = useState<Submission[]>([]);
     const user = localStorage.getItem("primaryUser");
-
+    const navigate=useNavigate()
     useEffect(() => {
         if (user) {
             getUser(user)
@@ -26,16 +28,12 @@ export function SingleUser() {
     if(!user) {
         return <div>Error fetching user</div>;
     }
-
+   
     return (
         <div className="bg-red-700 h-screen p-4 text-white">
             <h1>User: {user}</h1>
             <h2 className="mt-4 font-bold">Recent Problems:</h2>
-            <ul className="mt-2 ">
-                {problems.map((submission, index) => (
-                    <li key={index}>{submission.problem.name}</li>
-                ))}
-            </ul>
+            <Button size='sm' variant='primary' text='get' onClick={()=> navigate("/problemdistributionsingle")}></Button>
         </div>
     );
 }
