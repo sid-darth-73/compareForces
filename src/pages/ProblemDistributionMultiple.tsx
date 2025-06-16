@@ -54,7 +54,7 @@ async function getSolvedProblemsByRating(handle: string): Promise<UserData> {
   };
 }
 
-export function MultipleUser() {
+export function ProblemDistributionMultiple() {
   const [user1Data, setUser1Data] = useState<UserData | null>(null);
   const [user2Data, setUser2Data] = useState<UserData | null>(null);
   const [error, setError] = useState<string | null>(null);
