@@ -20,12 +20,12 @@ type ChartEntry = {
   user2Rating?: number;
 };
 
-
-async function getRatingChanges(handle: string): Promise<{ contestName: string; rating: number }[]> {
+// fetch rating changes for a user WITH contest time
+async function getRatingChanges(handle: string): Promise<{ contestName: string; rating: number; time: number }[]> {
   const res = await fetch(RatingChangesApi(handle));
   const data = await res.json();
 
-  if (data.status !== "OK") {
+  if(data.status !== "OK") {
     throw new Error("Failed to fetch data");
   }
 
@@ -34,6 +34,7 @@ async function getRatingChanges(handle: string): Promise<{ contestName: string; 
     .map((contest: any) => ({
       contestName: contest.contestName,
       rating: contest.newRating,
+      time: contest.ratingUpdateTimeSeconds,
     }));
 }
 
@@ -53,19 +54,50 @@ export function RatingDistributionMultiple() {
 
     Promise.all([getRatingChanges(user1), getRatingChanges(user2)])
       .then(([user1Data, user2Data]) => {
-        const maxLength = Math.max(user1Data.length, user2Data.length);
-        const merged: ChartEntry[] = [];
+        const contestMap: Record<number, ChartEntry> = {};
 
-        for (let i = 0; i < maxLength; i++) {
-          merged.push({
-            index: i,
-            contestName: user1Data[i]?.contestName || user2Data[i]?.contestName || `Contest ${i + 1}`,
-            user1Rating: user1Data[i]?.rating,
-            user2Rating: user2Data[i]?.rating,
-          });
+        for(const c of user1Data) {
+          if(!contestMap[c.time]) {
+            contestMap[c.time] = {
+              index: c.time,
+              contestName: c.contestName,
+            };
+          }
+          contestMap[c.time].user1Rating = c.rating;
         }
 
-        setChartData(merged);
+        for(const c of user2Data) {
+          if(!contestMap[c.time]) {
+            contestMap[c.time] = {
+              index: c.time,
+              contestName: c.contestName,
+            };
+          }
+          contestMap[c.time].user2Rating = c.rating;
+        }
+
+
+        const sorted = Object.values(contestMap).sort((a, b) => a.index - b.index);
+
+        // track last known ratings to fill in missing values
+        let prevUser1: number | undefined = undefined;
+        let prevUser2: number | undefined = undefined;
+
+        for(const entry of sorted) {
+          if(entry.user1Rating === undefined && prevUser1 !== undefined) {
+            entry.user1Rating = prevUser1;
+          } else if(entry.user1Rating !== undefined) {
+            prevUser1 = entry.user1Rating;
+          }
+
+          if(entry.user2Rating === undefined && prevUser2 !== undefined) {
+            entry.user2Rating = prevUser2;
+          } else if (entry.user2Rating !== undefined) {
+            prevUser2 = entry.user2Rating;
+          }
+        }
+
+        setChartData(sorted);
       })
       .catch((err) => {
         console.error(err);
@@ -73,7 +105,7 @@ export function RatingDistributionMultiple() {
       });
   }, [user1, user2]);
 
-  if (error) {
+  if(error) {
     return <div className="text-red-600 p-4">{error}</div>;
   }
 
@@ -86,8 +118,10 @@ export function RatingDistributionMultiple() {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="index"
-            tick={false}
-            label={{ value: "Contests", position: "insideBottom", offset: -5 }}
+            tickFormatter={(unix) =>
+              new Date(unix * 1000).toLocaleDateString(undefined, { month: "short", year: "numeric" })
+            }
+            label={{ value: "Contest Date", position: "insideBottom", offset: -5 }}
           />
           <YAxis
             label={{ value: "Rating", angle: -90, position: "insideLeft" }}
