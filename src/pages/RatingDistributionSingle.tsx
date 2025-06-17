@@ -5,54 +5,49 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from "recharts";
 
-async function getRatingChanges(handle: string): Promise<{
-  ratingChange: Record<number, { oldRating: number, newRating: number }>,
-  idToContest: Record<number, string>
-}> {
+async function getRatingChanges(handle: string): Promise<Array<{
+  contestId: number,
+  contestName: string,
+  oldRating: number,
+  newRating: number,
+  time: number
+}>> {
   const res = await fetch(RatingChangesApi(handle));
   const data = await res.json();
   if (data.status !== 'OK') {
     throw new Error("Failed to fetch data");
   }
 
-  const ratingChange: Record<number, { oldRating: number, newRating: number }> = {};
-  const idToContest: Record<number, string> = {};
+  const ratingChanges = data.result.map((contest: any) => ({
+    contestId: contest.contestId,
+    contestName: contest.contestName,
+    oldRating: contest.oldRating,
+    newRating: contest.newRating,
+    time: contest.ratingUpdateTimeSeconds
+  }));
 
-  for (const contest of data.result) {
-    const contestId = contest.contestId;
-    ratingChange[contestId] = {
-      oldRating: contest.oldRating,
-      newRating: contest.newRating
-    };
-    idToContest[contestId] = contest.contestName;
-  }
+  ratingChanges.sort((a: any, b: any) => a.time - b.time);
 
-  return { ratingChange, idToContest };
+  return ratingChanges;
 }
 
 export function RatingDistributionSingle() {
   const user = localStorage.getItem("primaryUser");
   const navigate = useNavigate();
-  const [chartData, setChartData] = useState<Array<{ contestId: number, oldRating: number, newRating: number, contestName: string }>>([]);
+  const [chartData, setChartData] = useState<Array<{
+    contestId: number,
+    contestName: string,
+    oldRating: number,
+    newRating: number,
+    time: number
+  }>>([]);
 
   useEffect(() => {
     if (!user) return;
 
     getRatingChanges(user)
-      .then(({ ratingChange, idToContest }) => {
-        const dataForChart = Object.entries(ratingChange).map(([contestIdStr, rating]) => {
-          const contestId = Number(contestIdStr);
-          return {
-            contestId,
-            oldRating: rating.oldRating,
-            newRating: rating.newRating,
-            contestName: idToContest[contestId]
-          };
-        });
-
-        //sorting for linear timeline (on contestId)
-        dataForChart.sort((a, b) => a.contestId - b.contestId);
-        setChartData(dataForChart);
+      .then((ratingData) => {
+        setChartData(ratingData);
       })
       .catch((error) => {
         console.error("Error fetching rating changes:", error);
@@ -69,22 +64,38 @@ export function RatingDistributionSingle() {
       <ResponsiveContainer width="100%" height={400}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="contestId" tick={false} label={{ value: 'Contests', position: 'insideBottom', offset: -5 }} />
-          <YAxis domain={['dataMin - 100', 'dataMax + 100']} label={{ value: 'Rating', angle: -90, position: 'insideLeft' }} />
-          <Tooltip content={({ active, payload }) => {
-            if (active && payload && payload.length) {
-              const data = payload[0].payload;
-              return (
-                <div className="bg-white text-black p-2 rounded shadow">
-                  <p><strong>{data.contestName}</strong></p>
-                  <p>Old Rating: {data.oldRating}</p>
-                  <p>New Rating: {data.newRating}</p>
-                </div>
-              );
-            }
-            return null;
-          }} />
-          <Line type="monotone" dataKey="newRating" stroke="#82ca9d" strokeWidth={2} dot={{ r: 4 }} />
+          <XAxis
+            dataKey="contestId"
+            tick={false}
+            label={{ value: 'Contests', position: 'insideBottom', offset: -5 }}
+          />
+          <YAxis
+            domain={([min, max]) => [min - 100, max + 100]}
+            label={{ value: 'Rating', angle: -90, position: 'insideLeft' }}
+          />
+          <Tooltip
+            content={({ active, payload }) => {
+              if (active && payload && payload.length) {
+                const data = payload[0].payload;
+                return (
+                  <div className="bg-white text-black p-2 rounded shadow">
+                    <p><strong>{data.contestName}</strong></p>
+                    <p>Old Rating: {data.oldRating}</p>
+                    <p>New Rating: {data.newRating}</p>
+                    <p>{new Date(data.time * 1000).toLocaleDateString()}</p>
+                  </div>
+                );
+              }
+              return null;
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="newRating"
+            stroke="#82ca9d"
+            strokeWidth={2}
+            dot={{ r: 4 }}
+          />
         </LineChart>
       </ResponsiveContainer>
       <button
