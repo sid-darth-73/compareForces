@@ -20,7 +20,7 @@ function Navbar() {
       <div className="flex justify-between items-center h-20">
         <div className="flex items-center">
           <div className="px-6 text-3xl font-light text-black dark:text-white border-r border-neutral-600 h-20 flex items-center">
-            Compare Forces
+            CompareForces
           </div>
         </div>
 
@@ -29,6 +29,7 @@ function Navbar() {
             <div className="text-black dark:text-white px-4 text-2xl">
               {userName || "guest"}
             </div>
+            
             {/* add toggle for dark/light in future */}
           </div>
         )}
