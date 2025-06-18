@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { InfoCard } from "../components/InfoCard";
 import { UserInfo } from "../components/UserInfo";
 import { UserInfoApi } from "../api/UserInfoApi";
+import { GetUserSubmissions, type Submission } from "../api/GetUserSubmissions";
 
 type UserData = {
     rating: number;
@@ -45,10 +46,12 @@ export function SingleUser() {
     const user = localStorage.getItem("primaryUser");
     const navigate = useNavigate();
     const [userInfo, setUserInfo] = useState<UserData | null>(null);
+    const [submissions, setSubmissions] = useState<Submission[]>([]);
 
     useEffect(() => {
         if(user) {
             getUserInfo(user).then(setUserInfo);
+            GetUserSubmissions(user).then(setSubmissions);
         }
     }, [user]);
 
@@ -59,7 +62,7 @@ export function SingleUser() {
         <div>
             <Navbar />
             <div className="bg-slate-800 min-h-screen p-4 text-white">
-                <h1 className="text-2xl mb-4">User: {user}</h1>
+                <h1 className="text-2xl mb-4 ">User: {user}</h1>
                 <UserInfo
                     avatar={userInfo.avatar}
                     rating={userInfo.rating}
@@ -70,12 +73,7 @@ export function SingleUser() {
                     <InfoCard text="Max Rating" value={userInfo.maxRating} />
                     <InfoCard text="Max Rank" value={userInfo.maxRank} />
                     <InfoCard text="Friend Count" value={userInfo.friendOfCount} />
-                </div>
-                <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto mb-6">
-                    <InfoCard text="Total Submissions" value={12} />
                     <InfoCard text="Contribution" value={userInfo.contribution} />
-                    <InfoCard text="Total Problems" value={132} />
-                    <InfoCard text="Current Rating" value={userInfo.rating} />
                 </div>
                 <div className="max-w-2xl mx-auto space-y-3">
                     <Button
@@ -91,6 +89,32 @@ export function SingleUser() {
                         onClick={() => navigate("/ratingdistributionsingle")}
                     />
                 </div>
+                { submissions.length > 0 && (
+                    <div className="max-w-2xl mx-auto mt-10">
+                        <h2 className="text-xl mb-4">Latest Submissions</h2>
+                        <ul className="space-y-2">
+                            {submissions.map((sub) => (
+                                <li
+                                    key={sub.id}
+                                    className={`p-3 rounded-lg ${
+                                        sub.verdict === "OK" ? "bg-green-700" : "bg-red-700"
+                                    }`}
+                                >
+                                    <div className="font-semibold">{sub.problem.name}</div>
+                                    <div className="text-sm text-gray-300">
+                                        Language: {sub.programmingLanguage} | Verdict: {sub.verdict}
+                                    </div>
+                                    {sub.problem.rating && (
+                                        <div className="text-sm text-gray-300">
+                                            Rating: {sub.problem.rating}
+                                        </div>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
             </div>
         </div>
     );
