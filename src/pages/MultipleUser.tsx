@@ -7,6 +7,7 @@ import { Button } from "../components/ui/Button";
 import { Badge } from "../components/ui/Badge";
 import { UserInfoApi } from "../api/UserInfoApi";
 import { GetUserSubmissions, type Submission } from "../api/GetUserSubmissions";
+import { getComparisonResponse } from "../api/getComparisonResponse";
 
 type UserData = {
   rating: number;
@@ -17,6 +18,23 @@ type UserData = {
   avatar: string;
   contribution: number;
 };
+function countUniqueProblems(subs: Submission[]): number {
+  const seen = new Set<string>();
+  subs.forEach((sub) => {
+    seen.add(sub.problem.name);
+  });
+  return seen.size;
+}
+
+function countHighRatedProblems(subs: Submission[]): number {
+  const seen = new Set<string>();
+  subs.forEach((sub) => {
+    if (sub.problem.rating && sub.problem.rating > 2000) {
+      seen.add(sub.problem.name);
+    }
+  });
+  return seen.size;
+}
 
 async function getUserInfo(user: string): Promise<UserData | null> {
   try {
@@ -54,6 +72,8 @@ export function MultipleUser() {
 
   const [subs1, setSubs1] = useState<Submission[]>([]);
   const [subs2, setSubs2] = useState<Submission[]>([]);
+  const [comparisonText, setComparisonText] = useState<string | null>(null);
+  const [loadingComparison, setLoadingComparison] = useState(false);
 
   useEffect(() => {
     if (user1) {
@@ -88,13 +108,43 @@ export function MultipleUser() {
               text="Rating Changes"
               onClick={() => navigate("/ratingdistributionmultiple")}
             />
-            <Button 
-             size="sm"
-             variant="primary"
-             text="Who is better?"
+            <Button
+              size="sm"
+              variant="primary"
+              text={loadingComparison ? "Loading..." : "Who is better?"}
+              onClick={async () => {
+                setLoadingComparison(true);
+                try {
+                  const result = await getComparisonResponse({
+                    user1,
+                    user2,
+                    userInfo1,
+                    userInfo2,
+                    subs1,
+                    subs2,
+                    problemCount1: countUniqueProblems(subs1),
+                    problemCount2: countUniqueProblems(subs2),
+                    highRatedCount1: countHighRatedProblems(subs1),
+                    highRatedCount2: countHighRatedProblems(subs2),
+                  });
+                  setComparisonText(result);
+                } catch (err) {
+                  setComparisonText("Oops! Something went wrong generating the comparison.");
+                } finally {
+                  setLoadingComparison(false);
+                }
+              }}
             />
 
+
           </div>
+          {comparisonText && (
+            <div className="mt-8 p-6 bg-slate-700 border border-slate-600 rounded-lg text-white whitespace-pre-line">
+              <h2 className="text-xl font-semibold mb-4">🤖 AI Verdict:</h2>
+              <p className="font-mono leading-relaxed">{comparisonText}</p>
+            </div>
+          )}
+
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">

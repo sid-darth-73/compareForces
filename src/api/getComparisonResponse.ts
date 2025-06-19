@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import {type Submission } from "./GetUserSubmissions"; 
 
-const apiKey = process.env.GEMINI_API_KEY
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
 export async function getComparisonResponse({
   user1,
@@ -57,10 +57,10 @@ Write a fun, snarky comparison (like a sarcastic but smart friend) that:
 - Praises the winner confidently
 - Makes cheeky, lighthearted remarks about the loser (without sounding cruel)
 - Uses wit and coding puns where appropriate.
-- Keep the response concise, within 3-4 sentences.
+- Keep the response atleast 200 words, comment on all the aspects of the provided data.
 `;
 
-  const genAI = new GoogleGenerativeAI(apiKey?apiKey:"");
+  const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   try {
