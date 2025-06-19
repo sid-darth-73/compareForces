@@ -88,6 +88,12 @@ export function MultipleUser() {
               text="Rating Changes"
               onClick={() => navigate("/ratingdistributionmultiple")}
             />
+            <Button 
+             size="sm"
+             variant="primary"
+             text="Who is better?"
+            />
+
           </div>
         </div>
 
