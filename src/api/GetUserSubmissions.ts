@@ -12,7 +12,7 @@ export type Submission = {
 
 export async function GetUserSubmissions(user: string): Promise<Submission[]> {
     try {
-        const res = await fetch(`https://codeforces.com/api/user.status?handle=${user}&from=1&count=10`);
+        const res = await fetch(`https://codeforces.com/api/user.status?handle=${user}&from=1&count=20`);
         const data = await res.json();
 
         if (data.status !== "OK") return [];
@@ -26,7 +26,7 @@ export async function GetUserSubmissions(user: string): Promise<Submission[]> {
                 tags: submission.problem.tags,
             },
             programmingLanguage: submission.programmingLanguage,
-            verdict: submission.verdict,
+            verdict: submission.verdict==="OK"? "ACCEPTED" : submission.verdict,
         }));
     } catch (err) {
         console.error("Failed to fetch submissions:", err);
