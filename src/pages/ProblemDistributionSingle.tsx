@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SubmissionApi } from '../api/SubmissionApi';
 import { Button } from '../components/ui/Button';
+import { Navbar } from '../components/ui/Navbar';
 
 async function getSolvedProblemsByRating(handle: string): Promise<{
   ratingMap: Record<number, { name: string; contestId: number; index: string; url: string }[]>,
@@ -76,12 +77,12 @@ export function ProblemDistributionSingle() {
     });
   };
 
-  if (error) {
-    return <div className="p-4 text-red-500">Error: {error}</div>;
+  if(error) {
+    return <div className="p-4 text-red-400 bg-slate-800 min-h-screen">{error}</div>;
   }
 
-  if (!problemsByRating || !ratingCount) {
-    return <div className="p-4 text-black bg-gray-300 h-screen">Loading...</div>;
+  if(!problemsByRating || !ratingCount) {
+    return <div className="p-4 text-white bg-slate-800 min-h-screen">Loading...</div>;
   }
 
   const sortedRatings = Object.keys(problemsByRating)
@@ -89,38 +90,47 @@ export function ProblemDistributionSingle() {
     .sort((a, b) => a - b);
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-semibold mb-4">Solved Problems by Rating</h1>
-      <div className="space-y-4">
-        {sortedRatings.map((rating) => (
-          <div key={rating} className="border rounded-lg shadow-md p-4">
-            <h2 className="text-xl font-bold mb-2">
-              Rating: {rating} Count: {ratingCount[rating]}
-            </h2>
-            <Button
-              variant="primary"
-              size="sm"
-              text={expandedRatings.has(rating) ? 'Hide problems' : 'Show problems'}
-              onClick={() => toggleRating(rating)}
-            />
-            {expandedRatings.has(rating) && (
-              <ul className="list-disc pl-5 space-y-1 mt-2">
-                {problemsByRating[rating].map((problem, index) => (
-                  <li key={index}>
-                    <a
-                      href={problem.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      {problem.name} ({problem.index})
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
+    <div>
+      <Navbar />
+      <div className="bg-slate-800 min-h-screen p-4 text-white">
+        <h1 className="text-2xl mb-6">Solved Problems by Rating</h1>
+        <div className="space-y-6">
+          {sortedRatings.map((rating) => (
+            <div
+              key={rating}
+              className="p-4 rounded-lg bg-slate-700 border border-slate-600 transition-all duration-200 hover:bg-slate-600 hover:shadow-md hover:-translate-y-0.5"
+            >
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-xl font-semibold">Rating: {rating==0?"Unrated":rating}</h2>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  text={expandedRatings.has(rating) ? 'Hide problems' : 'Show problems'}
+                  onClick={() => toggleRating(rating)}
+                />
+              </div>
+              <div className="text-gray-300 font-mono mb-3">
+                {ratingCount[rating]} {ratingCount[rating]>1 ? "problems": "problem"}
+              </div>
+              {expandedRatings.has(rating) && (
+                <ul className="list-disc pl-5 space-y-1 mt-2">
+                  {problemsByRating[rating].map((problem, index) => (
+                    <li key={index}>
+                      <a
+                        href={problem.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:underline"
+                      >
+                        {problem.name} ({problem.index})
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
