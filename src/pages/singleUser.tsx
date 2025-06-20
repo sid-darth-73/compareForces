@@ -49,23 +49,39 @@ export function SingleUser() {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState<UserData | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // NEW loading state
 
   useEffect(() => {
     if (user) {
-      getUserInfo(user).then(setUserInfo);
-      GetUserSubmissions(user).then(setSubmissions);
+      Promise.all([
+        getUserInfo(user).then(setUserInfo),
+        GetUserSubmissions(user).then(setSubmissions),
+      ]).finally(() => setIsLoading(false)); // Mark loading as done
     }
   }, [user]);
 
   if (!user) return <div className="text-white p-4">Error fetching user</div>;
-  if (!userInfo)
-    return <div className="text-white p-4">Loading user info...</div>;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white text-xl font-mono">
+        Fetching your Codeforces legacy...
+      </div>
+    );
+  }
+
+  if (!userInfo) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-red-400 text-xl font-mono">
+        Failed to load user data.
+      </div>
+    );
+  }
 
   return (
     <div>
       <Navbar />
       <div className="bg-slate-800 min-h-screen p-4 text-white">
-        <h1 className="text-2xl mb-4">User: {user}</h1>
         <UserInfo
           avatar={userInfo.avatar}
           rating={userInfo.rating}
@@ -79,7 +95,7 @@ export function SingleUser() {
           <InfoCard text="Contribution" value={userInfo.contribution} />
         </div>
 
-        <div className="max-w-2xl mx-auto space-y-3">
+        <div className="max-w-2xl mx-auto space-y-3 space-x-2">
           <Button
             size="md"
             variant="primary"
@@ -88,55 +104,55 @@ export function SingleUser() {
           />
           <Button
             size="md"
-            variant="secondary"
+            variant="primary"
             text="Rating Changes over Contests"
             onClick={() => navigate("/ratingdistributionsingle")}
           />
         </div>
-           {submissions.length > 0 && (
-        <div className="mt-10">
-            <h2 className="text-xl mb-4">Recent Submissions</h2>
+
+        {submissions.length > 0 && (
+          <div className="mt-10">
+            <h2 className="text-xl mb-4 font-mont">Recent Submissions</h2>
             <ul className="space-y-2">
-            {submissions.map((sub) => {
+              {submissions.map((sub) => {
                 let verdictVariant: "default" | "secondary" | "destructive" = "secondary";
 
                 if (sub.verdict === "ACCEPTED") {
-                verdictVariant = "default";
+                  verdictVariant = "default";
                 } else if (
-                [
+                  [
                     "WRONG_ANSWER",
                     "TIME_LIMIT_EXCEEDED",
                     "COMPILATION_ERROR",
                     "RUNTIME_ERROR",
-                ].includes(sub.verdict)
+                  ].includes(sub.verdict)
                 ) {
-                verdictVariant = "destructive";
+                  verdictVariant = "destructive";
                 }
 
                 return (
-                <li
+                  <li
                     key={sub.id}
-                    className="p-3 rounded-lg bg-slate-700 border border-slate-600 transition-all duration-200 hover:bg-slate-600 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
-                >
+                    className="p-3 rounded-lg bg-slate-700 border border-slate-600 transition-all duration-200 hover:bg-slate-600 hover:shadow-md hover:-translate-y-0.5 cursor-pointer font-mont"
+                  >
                     <div className="flex justify-between items-center">
-                    <div className="font-semibold">{sub.problem.name}</div>
-                    <Badge variant={verdictVariant}>{sub.verdict}</Badge>
+                      <div className="font-semibold font-mont">{sub.problem.name}</div>
+                      <Badge variant={verdictVariant}>{sub.verdict}</Badge>
                     </div>
-                    <div className="text-sm text-gray-300 mt-1 font-mono">
-                    Language: {sub.programmingLanguage}
+                    <div className="text-sm text-gray-300 mt-1 font-quick">
+                      Language: {sub.programmingLanguage}
                     </div>
                     {sub.problem.rating && (
-                    <div className="text-sm text-gray-300 font-mono">
+                      <div className="text-sm text-gray-300 font-quick">
                         Rating: {sub.problem.rating}
-                    </div>
+                      </div>
                     )}
-                </li>
+                  </li>
                 );
-            })}
+              })}
             </ul>
-        </div>
+          </div>
         )}
-
       </div>
     </div>
   );

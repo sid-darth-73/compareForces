@@ -108,7 +108,7 @@ export function ProblemDistributionMultiple() {
     <div>
       <Navbar />
       <div className="bg-slate-800 min-h-screen p-4 text-white">
-        <h1 className="text-2xl mb-6">Compare Solved Problems by Rating</h1>
+        <h1 className="text-2xl mb-6 font-mont">Compare Solved Problems by Rating</h1>
         <div className="space-y-6">
           {allRatings.map((rating) => (
             <div
@@ -116,7 +116,7 @@ export function ProblemDistributionMultiple() {
               className="p-4 rounded-lg bg-slate-700 border border-slate-600 transition-all duration-200 hover:bg-slate-600 hover:shadow-md hover:-translate-y-0.5"
             >
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-xl font-semibold font-mont">
                   Rating: {rating==0 ? "Unrated": rating}
                 </h2>
                 <Button
@@ -126,14 +126,19 @@ export function ProblemDistributionMultiple() {
                   onClick={() => toggleRating(rating)}
                 />
               </div>
-              <div className="text-gray-300 font-mono mb-3">
-                {name1}: {user1Data.ratingCount[rating] || 0} {user1Data.ratingCount[rating]>1 ? "problems": "problem"} | {name2}: {user2Data.ratingCount[rating] || 0} {user2Data.ratingCount[rating]>1 ? "problems": "problem"}
+              <div className="text-gray-300 font-quick mb-2">
+                <div>
+                  {name1}: {user1Data.ratingCount[rating] || 0} {user1Data.ratingCount[rating]>1 ? "problems": "problem"}
+                </div>
+                <div>
+                  {name2}: {user2Data.ratingCount[rating] || 0} {user2Data.ratingCount[rating]>1 ? "problems": "problem"}
+                </div>
               </div>
               {expandedRatings.has(rating) && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                   {/* user1 */}
                   <div>
-                    <h3 className="font-semibold mb-2">User 1</h3>
+                    <h3 className="font-semibold mb-2">{name1}</h3>
                     <ul className="space-y-1">
                       {(user1Data.ratingMap[rating] || []).map((problem, idx) => {
                         const common = isCommon(problem, user2Data.problemSet);
@@ -143,7 +148,7 @@ export function ProblemDistributionMultiple() {
                               href={problem.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`hover:underline ${common ? 'text-green-400 font-bold' : 'text-blue-400'}`}
+                              className={`hover:underline ${common ? 'text-green-400 font-bold font-mont' : 'text-blue-400'}`}
                             >
                               {problem.name} ({problem.index}) {common && '⭐'}
                             </a>
@@ -155,7 +160,7 @@ export function ProblemDistributionMultiple() {
 
                   {/* user2 */}
                   <div>
-                    <h3 className="font-semibold mb-2">User 2</h3>
+                    <h3 className="font-semibold mb-2">{name2}</h3>
                     <ul className="space-y-1">
                       {(user2Data.ratingMap[rating] || []).map((problem, idx) => {
                         const common = isCommon(problem, user1Data.problemSet);
@@ -165,7 +170,7 @@ export function ProblemDistributionMultiple() {
                               href={problem.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`hover:underline ${common ? 'text-green-400 font-bold' : 'text-blue-400'}`}
+                              className={`hover:underline ${common ? 'text-green-400 font-bold font-mont' : 'text-blue-400'}`}
                             >
                               {problem.name} ({problem.index}) {common && '⭐'}
                             </a>

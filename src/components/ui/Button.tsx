@@ -20,7 +20,7 @@ const variantStyles = {
     "secondary": "bg-[#d9ddee] text-[#9492db]",
 }
 
-const defaultStyle = "font-thin cursor-pointer"
+const defaultStyle = "font-quick cursor-pointer"
 
 export function Button(props: ButtonProps) {
     const StartIcon = props.startIcon;

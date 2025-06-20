@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RatingChangesApi } from "../api/RatingChangesApi";
+import { Navbar } from "../components/ui/Navbar";
 import {
   LineChart,
   Line,
@@ -111,6 +112,7 @@ export function RatingDistributionMultiple() {
 
   return (
     <div className="p-4 h-screen bg-gray-900 text-white">
+      <Navbar/>
       <h1 className="text-xl font-bold mb-4">Rating Comparison</h1>
 
       <ResponsiveContainer width="100%" height={450}>

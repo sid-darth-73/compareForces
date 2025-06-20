@@ -2,18 +2,15 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import {type Submission } from "./GetUserSubmissions"; 
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
 export async function getComparisonResponse({
   user1,
   user2,
   userInfo1,
   userInfo2,
-  subs1,
-  subs2,
-  problemCount1,
-  problemCount2,
-  highRatedCount1,
-  highRatedCount2,
+  subs1, // not used
+  subs2, // not used
+  highCount1, //not used
+  highCount2 //not used
 }: {
   user1: string;
   user2: string;
@@ -21,17 +18,12 @@ export async function getComparisonResponse({
   userInfo2: any;
   subs1: Submission[]; 
   subs2: Submission[]; 
-  problemCount1: number;
-  problemCount2: number;
-  highRatedCount1: number;
-  highRatedCount2: number;
+  highCount1: number;
+  highCount2: number;
 }) {
-  const acCount1 = subs1.filter((s) => s.verdict === "OK").length;
-  const acCount2 = subs2.filter((s) => s.verdict === "OK").length;
 
   const prompt = `
 Compare two Codeforces users based on the following data. Choose who is the better competitive programmer.
-
 User 1: ${user1}
 - Rating: ${userInfo1.rating}
 - Max Rating: ${userInfo1.maxRating}
@@ -39,8 +31,7 @@ User 1: ${user1}
 - Max Rank: ${userInfo1.maxRank}
 - Friend Count: ${userInfo1.friendOfCount}
 - Contribution: ${userInfo1.contribution}
-- Recent Accepted Submissions: ${acCount1} out of ${subs1.length} total submissions
-- Unique Solved Problems: ${problemCount1}, including ${highRatedCount1} problems rated above 2000
+- Last Online Time: ${userInfo1.lastOnlineTimeSeconds}
 
 User 2: ${user2}
 - Rating: ${userInfo2.rating}
@@ -49,15 +40,19 @@ User 2: ${user2}
 - Max Rank: ${userInfo2.maxRank}
 - Friend Count: ${userInfo2.friendOfCount}
 - Contribution: ${userInfo2.contribution}
-- Recent Accepted Submissions: ${acCount2} out of ${subs2.length} total submissions
-- Unique Solved Problems: ${problemCount2}, including ${highRatedCount2} problems rated above 2000
+- Last Online Time: ${userInfo2.lastOnlineTimeSeconds}
 
 Write a fun, snarky comparison (like a sarcastic but smart friend) that:
 - Clearly declares who is better
 - Praises the winner confidently
 - Makes cheeky, lighthearted remarks about the loser (without sounding cruel)
 - Uses wit and coding puns where appropriate.
-- Keep the response atleast 200 words, comment on all the aspects of the provided data.
+- Keep the response atleast 300 words, comment on all the aspects of the provided data.
+
+Suggest the loser on how can he beat the other person, along with their provided data, use generic advices like:
+- Keep solving more problems with rating +200 of their current rating
+- Keeping calm when giving contests
+- Give this advice "um_nik says that don't waste time learning random algorithms, learn binary search first. Are your basics clear?"
 `;
 
   const genAI = new GoogleGenerativeAI(apiKey);

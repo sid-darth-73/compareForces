@@ -8,33 +8,9 @@ import { Badge } from "../components/ui/Badge";
 import { UserInfoApi } from "../api/UserInfoApi";
 import { GetUserSubmissions, type Submission } from "../api/GetUserSubmissions";
 import { getComparisonResponse } from "../api/getComparisonResponse";
-
-type UserData = {
-  rating: number;
-  maxRating: number;
-  friendOfCount: number;
-  rank: string;
-  maxRank: string;
-  avatar: string;
-  contribution: number;
-};
-function countUniqueProblems(subs: Submission[]): number {
-  const seen = new Set<string>();
-  subs.forEach((sub) => {
-    seen.add(sub.problem.name);
-  });
-  return seen.size;
-}
-
-function countHighRatedProblems(subs: Submission[]): number {
-  const seen = new Set<string>();
-  subs.forEach((sub) => {
-    if (sub.problem.rating && sub.problem.rating > 2000) {
-      seen.add(sub.problem.name);
-    }
-  });
-  return seen.size;
-}
+import { countHighRatedProblems } from "../assets/countHighRatedProblems";
+import { type UserData } from "../types/UserData";
+import ReactMarkdown from "react-markdown";
 
 async function getUserInfo(user: string): Promise<UserData | null> {
   try {
@@ -55,6 +31,7 @@ async function getUserInfo(user: string): Promise<UserData | null> {
         result.titlePhoto ||
         `https://avatars.dicebear.com/api/identicon/${user}.svg`,
       contribution: result.contribution,
+      lastOnlineTimeSeconds: result.lastOnlineTimeSeconds
     };
   } catch (err) {
     console.error("Failed to fetch user info:", err);
@@ -69,32 +46,47 @@ export function MultipleUser() {
 
   const [userInfo1, setUserInfo1] = useState<UserData | null>(null);
   const [userInfo2, setUserInfo2] = useState<UserData | null>(null);
-
   const [subs1, setSubs1] = useState<Submission[]>([]);
   const [subs2, setSubs2] = useState<Submission[]>([]);
   const [comparisonText, setComparisonText] = useState<string | null>(null);
   const [loadingComparison, setLoadingComparison] = useState(false);
+  const [showVerdict, setShowVerdict] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // NEW STATE
 
   useEffect(() => {
-    if (user1) {
-      getUserInfo(user1).then(setUserInfo1);
-      GetUserSubmissions(user1).then(setSubs1);
-    }
-    if (user2) {
-      getUserInfo(user2).then(setUserInfo2);
-      GetUserSubmissions(user2).then(setSubs2);
+    if (user1 && user2) {
+      Promise.all([
+        getUserInfo(user1).then(setUserInfo1),
+        getUserInfo(user2).then(setUserInfo2),
+        GetUserSubmissions(user1).then(setSubs1),
+        GetUserSubmissions(user2).then(setSubs2),
+      ]).finally(() => setIsLoading(false));
     }
   }, [user1, user2]);
 
-  if (!user1 || !user2) return <div className="text-white p-4">Error fetching users</div>;
-  if (!userInfo1 || !userInfo2) return <div className="text-white p-4">Loading users...</div>;
+  if (!user1 || !user2)
+    return <div className="text-white p-4">Error fetching users</div>;
+
+  if (isLoading)
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white text-xl font-mono">
+        Comparing profiles, please wait...
+      </div>
+    );
+
+  if (!userInfo1 || !userInfo2)
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-red-400 text-xl font-mono">
+        Failed to load user data.
+      </div>
+    );
 
   return (
     <div>
       <Navbar />
       <div className="bg-slate-800 min-h-screen p-4 text-white">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl">Comparing: {user1} vs {user2}</h1>
+          <h1 className="text-2xl font-mont">Comparing: {user1} vs {user2}</h1>
           <div className="space-x-2">
             <Button
               size="sm"
@@ -110,9 +102,24 @@ export function MultipleUser() {
             />
             <Button
               size="sm"
-              variant="primary"
-              text={loadingComparison ? "Loading..." : "Who is better?"}
+              variant="secondary"
+              text={
+                loadingComparison
+                  ? "Loading..."
+                  : comparisonText && showVerdict
+                  ? "Close Verdict"
+                  : "Who is better?"
+              }
               onClick={async () => {
+                if (comparisonText && showVerdict) {
+                  setShowVerdict(false);
+                  return;
+                }
+                if (comparisonText) {
+                  setShowVerdict(true);
+                  return;
+                }
+
                 setLoadingComparison(true);
                 try {
                   const result = await getComparisonResponse({
@@ -122,39 +129,35 @@ export function MultipleUser() {
                     userInfo2,
                     subs1,
                     subs2,
-                    problemCount1: countUniqueProblems(subs1),
-                    problemCount2: countUniqueProblems(subs2),
-                    highRatedCount1: countHighRatedProblems(subs1),
-                    highRatedCount2: countHighRatedProblems(subs2),
+                    highCount1: countHighRatedProblems(subs1),
+                    highCount2: countHighRatedProblems(subs2),
                   });
                   setComparisonText(result);
+                  setShowVerdict(true);
                 } catch (err) {
                   setComparisonText("Oops! Something went wrong generating the comparison.");
+                  setShowVerdict(true);
                 } finally {
                   setLoadingComparison(false);
                 }
               }}
             />
-
-
           </div>
-          {comparisonText && (
+
+          {comparisonText && showVerdict && (
             <div className="mt-8 p-6 bg-slate-700 border border-slate-600 rounded-lg text-white whitespace-pre-line">
               <h2 className="text-xl font-semibold mb-4">🤖 AI Verdict:</h2>
-              <p className="font-mono leading-relaxed">{comparisonText}</p>
+              <div className="font-mont">
+                <ReactMarkdown>{comparisonText}</ReactMarkdown>
+              </div>
             </div>
           )}
-
         </div>
 
+        {/* user info cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          {/* user 1 */}
           <div>
-            <UserInfo
-              avatar={userInfo1.avatar}
-              rating={userInfo1.rating}
-              rank={userInfo1.rank}
-            />
+            <UserInfo avatar={userInfo1.avatar} rating={userInfo1.rating} rank={userInfo1.rank} />
             <div className="grid grid-cols-2 gap-4 mt-4">
               <InfoCard text="Max Rating" value={userInfo1.maxRating} />
               <InfoCard text="Max Rank" value={userInfo1.maxRank} />
@@ -163,13 +166,8 @@ export function MultipleUser() {
             </div>
           </div>
 
-          {/* user 2 */}
           <div>
-            <UserInfo
-              avatar={userInfo2.avatar}
-              rating={userInfo2.rating}
-              rank={userInfo2.rank}
-            />
+            <UserInfo avatar={userInfo2.avatar} rating={userInfo2.rating} rank={userInfo2.rank} />
             <div className="grid grid-cols-2 gap-4 mt-4">
               <InfoCard text="Max Rating" value={userInfo2.maxRating} />
               <InfoCard text="Max Rank" value={userInfo2.maxRank} />
@@ -179,26 +177,18 @@ export function MultipleUser() {
           </div>
         </div>
 
+        {/* submissions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* subs b user1 */}
           <div>
-            <h2 className="text-xl mb-4">Recent Submissions: {user1}</h2>
+            <h2 className="text-xl mb-4 font-mont">Recent Submissions: {user1}</h2>
             <ul className="space-y-2">
               {subs1.map((sub) => {
                 let verdictVariant: "default" | "secondary" | "destructive" = "secondary";
-
-                if (sub.verdict === "ACCEPTED") {
-                  verdictVariant = "default";
-                } else if (
-                  [
-                    "WRONG_ANSWER",
-                    "TIME_LIMIT_EXCEEDED",
-                    "COMPILATION_ERROR",
-                    "RUNTIME_ERROR",
-                  ].includes(sub.verdict)
-                ) {
+                if (sub.verdict === "ACCEPTED") verdictVariant = "default";
+                else if (
+                  ["WRONG_ANSWER", "TIME_LIMIT_EXCEEDED", "COMPILATION_ERROR", "RUNTIME_ERROR"].includes(sub.verdict)
+                )
                   verdictVariant = "destructive";
-                }
 
                 return (
                   <li
@@ -206,16 +196,14 @@ export function MultipleUser() {
                     className="p-3 rounded-lg bg-slate-700 border border-slate-600 transition-all duration-200 hover:bg-slate-600 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
                   >
                     <div className="flex justify-between items-center">
-                      <div className="font-semibold">{sub.problem.name}</div>
+                      <div className="font-semibold font-mont">{sub.problem.name}</div>
                       <Badge variant={verdictVariant}>{sub.verdict}</Badge>
                     </div>
-                    <div className="text-sm text-gray-300 mt-1 font-mono">
+                    <div className="text-sm text-gray-300 mt-1 font-quick">
                       Language: {sub.programmingLanguage}
                     </div>
                     {sub.problem.rating && (
-                      <div className="text-sm text-gray-300 font-mono">
-                        Rating: {sub.problem.rating}
-                      </div>
+                      <div className="text-sm text-gray-300 font-quick">Rating: {sub.problem.rating}</div>
                     )}
                   </li>
                 );
@@ -223,25 +211,16 @@ export function MultipleUser() {
             </ul>
           </div>
 
-          {/* subs by user2 */}
           <div>
-            <h2 className="text-xl mb-4">Recent Submissions: {user2}</h2>
+            <h2 className="text-xl mb-4 font-mont">Recent Submissions: {user2}</h2>
             <ul className="space-y-2">
               {subs2.map((sub) => {
                 let verdictVariant: "default" | "secondary" | "destructive" = "secondary";
-
-                if (sub.verdict === "ACCEPTED") {
-                  verdictVariant = "default";
-                } else if (
-                  [
-                    "WRONG_ANSWER",
-                    "TIME_LIMIT_EXCEEDED",
-                    "COMPILATION_ERROR",
-                    "RUNTIME_ERROR",
-                  ].includes(sub.verdict)
-                ) {
+                if (sub.verdict === "ACCEPTED") verdictVariant = "default";
+                else if (
+                  ["WRONG_ANSWER", "TIME_LIMIT_EXCEEDED", "COMPILATION_ERROR", "RUNTIME_ERROR"].includes(sub.verdict)
+                )
                   verdictVariant = "destructive";
-                }
 
                 return (
                   <li
@@ -249,16 +228,14 @@ export function MultipleUser() {
                     className="p-3 rounded-lg bg-slate-700 border border-slate-600 transition-all duration-200 hover:bg-slate-600 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
                   >
                     <div className="flex justify-between items-center">
-                      <div className="font-semibold">{sub.problem.name}</div>
+                      <div className="font-semibold font-mont">{sub.problem.name}</div>
                       <Badge variant={verdictVariant}>{sub.verdict}</Badge>
                     </div>
-                    <div className="text-sm text-gray-300 mt-1 font-mono">
+                    <div className="text-sm text-gray-300 mt-1 font-quick">
                       Language: {sub.programmingLanguage}
                     </div>
                     {sub.problem.rating && (
-                      <div className="text-sm text-gray-300 font-mono">
-                        Rating: {sub.problem.rating}
-                      </div>
+                      <div className="text-sm text-gray-300 font-quick">Rating: {sub.problem.rating}</div>
                     )}
                   </li>
                 );

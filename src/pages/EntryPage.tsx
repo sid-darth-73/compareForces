@@ -38,8 +38,8 @@ export function EntryPage() {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-slate-900 text-white p-4">
-            <div className="bg-slate-800 rounded-xl p-8 w-full max-w-md shadow-lg space-y-6">
-                <h1 className="text-2xl text-center mb-2 font-mono">Welcome to CompareForces!</h1>
+            <div className="bg-slate-800 rounded-xl p-8 w-full max-w-lg shadow-lg space-y-6">
+                <h1 className="text-2xl text-center mb-2 font-mont">Welcome to Compare Forces!</h1>
                 <Input
                     placeholder="Enter your Codeforces handle"
                     reference={primaryUserNameRef}
@@ -60,6 +60,17 @@ export function EntryPage() {
                 </div>
                 
             </div>
+            {/* <div>
+                <div className="font-mono">
+                    Test font family 200
+                </div>
+                <div className="font-mont">
+                    Test font family 200
+                </div>
+                <div>
+                    Test font family 200
+                </div>
+            </div> */}
         </div>
     );
 }

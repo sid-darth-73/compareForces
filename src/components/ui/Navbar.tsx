@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Navbar() {
   const [userName, setUserName] = useState("");
   const [isWideScreen, setIsWideScreen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setUserName(localStorage.getItem("primaryUser") || "");
@@ -19,20 +21,14 @@ function Navbar() {
     <nav className="sticky top-0 z-50 w-full bg-slate-900 border-b border-neutral-600">
       <div className="flex justify-between items-center h-20">
         <div className="flex items-center">
-          <div className="px-6 text-3xl text-black dark:text-white border-r border-neutral-600 h-20 flex items-center font-mono font-extralight">
+          {/* Clickable CompareForces */}
+          <div
+            onClick={() => navigate("/")}
+            className="px-6 text-3xl text-black dark:text-white border-r border-neutral-600 h-20 flex items-center font-quick font-extralight cursor-pointer hover:text-purple-400 transition duration-200"
+          >
             CompareForces
           </div>
         </div>
-
-        {isWideScreen && (
-          <div className="flex items-center">
-            <div className="text-black dark:text-white px-4 text-2xl font-mono font-extralight">
-              {userName || "guest"}
-            </div>
-            
-            {/* add toggle for dark/light in future */}
-          </div>
-        )}
       </div>
     </nav>
   );

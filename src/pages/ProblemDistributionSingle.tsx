@@ -101,7 +101,7 @@ export function ProblemDistributionSingle() {
               className="p-4 rounded-lg bg-slate-700 border border-slate-600 transition-all duration-200 hover:bg-slate-600 hover:shadow-md hover:-translate-y-0.5"
             >
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-xl font-semibold">Rating: {rating==0?"Unrated":rating}</h2>
+                <h2 className="text-xl font-semibold font-mont">Rating: {rating==0?"Unrated":rating}</h2>
                 <Button
                   variant="primary"
                   size="sm"
@@ -109,7 +109,7 @@ export function ProblemDistributionSingle() {
                   onClick={() => toggleRating(rating)}
                 />
               </div>
-              <div className="text-gray-300 font-mono mb-3">
+              <div className="text-gray-300 font-quick mb-3">
                 {ratingCount[rating]} {ratingCount[rating]>1 ? "problems": "problem"}
               </div>
               {expandedRatings.has(rating) && (
