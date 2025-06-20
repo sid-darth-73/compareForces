@@ -7,10 +7,6 @@ export async function getComparisonResponse({
   user2,
   userInfo1,
   userInfo2,
-  subs1, // not used
-  subs2, // not used
-  highCount1, //not used
-  highCount2 //not used
 }: {
   user1: string;
   user2: string;
