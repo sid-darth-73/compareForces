@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Navbar } from "../components/ui/Navbar";
-import { InfoCard } from "../components/InfoCard";
-import { UserInfo } from "../components/UserInfo";
-import { Button } from "../components/ui/Button";
-import { Badge } from "../components/ui/Badge";
-import { UserInfoApi } from "../api/UserInfoApi";
-import { GetUserSubmissions, type Submission } from "../api/GetUserSubmissions";
-import { getComparisonResponse } from "../api/getComparisonResponse";
-import { countHighRatedProblems } from "../assets/countHighRatedProblems";
-import { type UserData } from "../types/UserData";
+import { Navbar } from "../components/ui/Navbar.tsx";
+import { InfoCard } from "../components/InfoCard.tsx";
+import { UserInfo } from "../components/UserInfo.tsx";
+import { Button } from "../components/ui/Button.tsx";
+import { Badge } from "../components/ui/Badge.tsx";
+import { UserInfoApi } from "../api/UserInfoApi.tsx";
+import { GetUserSubmissions, type Submission } from "../api/GetUserSubmissions.ts";
+import { getComparisonResponse } from "../api/getComparisonResponse.ts";
+import { countHighRatedProblems } from "../assets/countHighRatedProblems.ts";
+import { type UserData } from "../types/UserData.ts";
 import ReactMarkdown from "react-markdown";
 
 async function getUserInfo(user: string): Promise<UserData | null> {

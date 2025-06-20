@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { SubmissionApi } from '../api/SubmissionApi';
-import { Button } from '../components/ui/Button';
-import { Navbar } from '../components/ui/Navbar';
+import { SubmissionApi } from '../api/SubmissionApi.tsx';
+import { Button } from '../components/ui/Button.tsx';
+import { Navbar } from '../components/ui/Navbar.tsx';
 
 async function getSolvedProblemsByRating(handle: string): Promise<{
   ratingMap: Record<number, { name: string; contestId: number; index: string; url: string }[]>,

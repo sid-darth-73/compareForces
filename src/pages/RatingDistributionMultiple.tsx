@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { RatingChangesApi } from "../api/RatingChangesApi";
-import { Navbar } from "../components/ui/Navbar";
+import { RatingChangesApi } from "../api/RatingChangesApi.tsx";
+import { Navbar } from "../components/ui/Navbar.tsx";
 import {
   LineChart,
   Line,

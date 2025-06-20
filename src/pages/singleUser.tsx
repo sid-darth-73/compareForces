@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Navbar } from "../components/ui/Navbar";
-import { Button } from "../components/ui/Button";
-import { InfoCard } from "../components/InfoCard";
-import { UserInfo } from "../components/UserInfo";
-import { UserInfoApi } from "../api/UserInfoApi";
-import { GetUserSubmissions, type Submission } from "../api/GetUserSubmissions";
-import { Badge } from "../components/ui/Badge";
+import { Navbar } from "../components/ui/Navbar.tsx";
+import { Button } from "../components/ui/Button.tsx";
+import { InfoCard } from "../components/InfoCard.tsx";
+import { UserInfo } from "../components/UserInfo.tsx";
+import { UserInfoApi } from "../api/UserInfoApi.tsx";
+import { GetUserSubmissions, type Submission } from "../api/GetUserSubmissions.ts";
+import { Badge } from "../components/ui/Badge.tsx";
 
 type UserData = {
   rating: number;

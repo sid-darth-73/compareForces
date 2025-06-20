@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import {type Submission } from "./GetUserSubmissions"; 
+import {type Submission } from "./GetUserSubmissions.ts"; 
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 export async function getComparisonResponse({

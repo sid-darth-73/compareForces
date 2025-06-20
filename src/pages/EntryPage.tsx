@@ -1,8 +1,8 @@
 import { useRef, useEffect } from "react";
-import { Button } from "../components/ui/Button";
+import { Button } from "../components/ui/Button.tsx";
 import { useNavigate } from "react-router-dom";
-import { Input } from "../components/Input";
-import { HeartIcon } from "../components/ui/HeartIcon";
+import { Input } from "../components/Input.tsx";
+import { HeartIcon } from "../components/ui/HeartIcon.tsx";
 export function EntryPage() {
     const primaryUserNameRef = useRef<HTMLInputElement>(null);
     const secondaryUserNameRef = useRef<HTMLInputElement>(null);

@@ -1,12 +1,12 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import {EntryPage}  from './pages/EntryPage'
-import { MultipleUser } from './pages/MultipleUser'
-import { SingleUser } from './pages/SingleUser'
-import { ErrorPage } from './pages/ErrorPage'
-import { ProblemDistributionSingle } from './pages/ProblemDistributionSingle'
-import { ProblemDistributionMultiple } from './pages/ProblemDistributionMultiple'
-import { RatingDistributionSingle } from './pages/RatingDistributionSingle'
-import { RatingDistributionMultiple } from './pages/RatingDistributionMultiple'
+import {EntryPage}  from './pages/EntryPage.tsx'
+import { MultipleUser } from './pages/MultipleUser.tsx'
+import { SingleUser } from './pages/SingleUser.tsx'
+import { ErrorPage } from './pages/ErrorPage.tsx'
+import { ProblemDistributionSingle } from './pages/ProblemDistributionSingle.tsx'
+import { ProblemDistributionMultiple } from './pages/ProblemDistributionMultiple.tsx'
+import { RatingDistributionSingle } from './pages/RatingDistributionSingle.tsx'
+import { RatingDistributionMultiple } from './pages/RatingDistributionMultiple.tsx'
 function App() {
 
   return (

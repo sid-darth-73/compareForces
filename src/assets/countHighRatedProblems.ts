@@ -1,4 +1,4 @@
-import { type Submission } from "../api/GetUserSubmissions";
+import { type Submission } from "../api/GetUserSubmissions.ts";
 
 export function countHighRatedProblems(subs: Submission[]): number {
   const seen = new Set<string>();
