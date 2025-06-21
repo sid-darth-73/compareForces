@@ -127,10 +127,6 @@ export function MultipleUser() {
                     user2,
                     userInfo1,
                     userInfo2,
-                    subs1,
-                    subs2,
-                    highCount1: countHighRatedProblems(subs1),
-                    highCount2: countHighRatedProblems(subs2),
                   });
                   setComparisonText(result);
                   setShowVerdict(true);
