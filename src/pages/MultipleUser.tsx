@@ -8,7 +8,6 @@ import { Badge } from "../components/ui/Badge.tsx";
 import { UserInfoApi } from "../api/UserInfoApi.tsx";
 import { GetUserSubmissions, type Submission } from "../api/GetUserSubmissions.ts";
 import { getComparisonResponse } from "../api/getComparisonResponse.ts";
-import { countHighRatedProblems } from "../assets/countHighRatedProblems.ts";
 import { type UserData } from "../types/UserData.ts";
 import ReactMarkdown from "react-markdown";
 
