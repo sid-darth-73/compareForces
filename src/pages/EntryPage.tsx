@@ -47,13 +47,13 @@ export function EntryPage() {
                         reference={primaryUserNameRef}
                     />
                     <Input
-                        placeholder="Enter your friend's Codeforces handle (optional)"
+                        placeholder="Enter your friend's Codeforces handle"
                         reference={secondaryUserNameRef}
                     />
-                    <div className="flex items-center justify-center">
+                    <div className="flex items-center justify-center animate-bounce">
                         <Button
                             variant="primary"
-                            text="Click (or press Enter)"
+                            text="Compare Them!"
                             size="md"
                             onClick={store}
                         />
