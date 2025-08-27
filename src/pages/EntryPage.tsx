@@ -19,10 +19,10 @@ export function EntryPage() {
         localStorage.setItem("primaryUser", primaryUser);
 
         if (!secondaryUser) {
-            navigate("/singleUser");
+            navigate("/singleuser");
         } else {
             localStorage.setItem("secondaryUser", secondaryUser);
-            navigate("/multipleUser");
+            navigate("/multipleuser");
         }
     }
 

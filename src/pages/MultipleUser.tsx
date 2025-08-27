@@ -8,35 +8,58 @@ import { Badge } from "../components/ui/Badge.tsx";
 import { UserInfoApi } from "../api/UserInfoApi.tsx";
 import { GetUserSubmissions, type Submission } from "../api/GetUserSubmissions.ts";
 import { getComparisonResponse } from "../api/getComparisonResponse.ts";
+
+import { info1 } from "../assets/SAMPLE_RESPONSE_INFO1.ts";
+import { info2 } from "../assets/SAMPLE_RESPONSE_INFO2.ts";
+import { sub1 } from "../assets/SAMPLE_RESPONSE_SUB1.ts";
+import { sub2 } from "../assets/SAMPLE_RESPONSE_SUB2.ts";
 import { type UserData } from "../types/UserData.ts";
 import ReactMarkdown from "react-markdown";
+function mapInfoResponse(data: any): UserData {
+  const result = data.result[0];
+  return {
+    rating: result.rating,
+    maxRating: result.maxRating,
+    friendOfCount: result.friendOfCount,
+    rank: result.rank,
+    maxRank: result.maxRank,
+    avatar:
+      result.titlePhoto ||
+      `https://avatars.dicebear.com/api/identicon/${result.handle}.svg`,
+    contribution: result.contribution,
+    lastOnlineTimeSeconds: result.lastOnlineTimeSeconds,
+  };
+}
 
 async function getUserInfo(user: string): Promise<UserData | null> {
+  // ✅ Use hardcoded fallback for unbit/Clash
+  if (user === "unbit") return mapInfoResponse(info1);
+  if (user === "Clash") return mapInfoResponse(info2);
+
   try {
     const response = await fetch(UserInfoApi({ handle1: user }));
     const data = await response.json();
-
     if (data.status !== "OK") return null;
-
-    const result = data.result[0];
-
-    return {
-      rating: result.rating,
-      maxRating: result.maxRating,
-      friendOfCount: result.friendOfCount,
-      rank: result.rank,
-      maxRank: result.maxRank,
-      avatar:
-        result.titlePhoto ||
-        `https://avatars.dicebear.com/api/identicon/${user}.svg`,
-      contribution: result.contribution,
-      lastOnlineTimeSeconds: result.lastOnlineTimeSeconds
-    };
+    return mapInfoResponse(data);
   } catch (err) {
     console.error("Failed to fetch user info:", err);
     return null;
   }
 }
+
+async function getUserSubmissions(user: string): Promise<Submission[]> {
+  // ✅ Use hardcoded fallback
+  if (user === "unbit") return sub1.result;
+  if (user === "Clash") return sub2.result;
+
+  try {
+    return await GetUserSubmissions(user);
+  } catch (err) {
+    console.error("Failed to fetch submissions:", err);
+    return [];
+  }
+}
+
 
 export function MultipleUser() {
   const user1 = localStorage.getItem("primaryUser");
@@ -50,18 +73,19 @@ export function MultipleUser() {
   const [comparisonText, setComparisonText] = useState<string | null>(null);
   const [loadingComparison, setLoadingComparison] = useState(false);
   const [showVerdict, setShowVerdict] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // NEW STATE
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user1 && user2) {
-      Promise.all([
-        getUserInfo(user1).then(setUserInfo1),
-        getUserInfo(user2).then(setUserInfo2),
-        GetUserSubmissions(user1).then(setSubs1),
-        GetUserSubmissions(user2).then(setSubs2),
-      ]).finally(() => setIsLoading(false));
-    }
-  }, [user1, user2]);
+  if (user1 && user2) {
+    Promise.all([
+      getUserInfo(user1).then(setUserInfo1),
+      getUserInfo(user2).then(setUserInfo2),
+      getUserSubmissions(user1).then(setSubs1),
+      getUserSubmissions(user2).then(setSubs2),
+    ]).finally(() => setIsLoading(false));
+  }
+}, [user1, user2]);
+
 
   if (!user1 || !user2)
     return <div className="text-white p-4">Error fetching users</div>;
@@ -179,7 +203,9 @@ export function MultipleUser() {
             <ul className="space-y-2">
               {subs1.map((sub) => {
                 let verdictVariant: "default" | "secondary" | "destructive" = "secondary";
-                if (sub.verdict === "ACCEPTED") verdictVariant = "default";
+                if (sub.verdict === "ACCEPTED" || sub.verdict==="OK") {
+                  verdictVariant="default"; sub.verdict="ACCEPTED"
+                }
                 else if (
                   ["WRONG_ANSWER", "TIME_LIMIT_EXCEEDED", "COMPILATION_ERROR", "RUNTIME_ERROR"].includes(sub.verdict)
                 )
@@ -211,7 +237,9 @@ export function MultipleUser() {
             <ul className="space-y-2">
               {subs2.map((sub) => {
                 let verdictVariant: "default" | "secondary" | "destructive" = "secondary";
-                if (sub.verdict === "ACCEPTED") verdictVariant = "default";
+                if (sub.verdict === "ACCEPTED" || sub.verdict==="OK") {
+                  verdictVariant="default"; sub.verdict="ACCEPTED"
+                }
                 else if (
                   ["WRONG_ANSWER", "TIME_LIMIT_EXCEEDED", "COMPILATION_ERROR", "RUNTIME_ERROR"].includes(sub.verdict)
                 )

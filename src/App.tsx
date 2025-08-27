@@ -13,9 +13,10 @@ function App() {
     <>
     <BrowserRouter>
     <Routes>
+
       <Route path="/" element={<EntryPage/>}/>
-      <Route path="/singleUser" element={<SingleUser/>}/>
-      <Route path="/multipleUser" element={<MultipleUser/>}/>
+      <Route path="/singleuser" element={<SingleUser/>}/>
+      <Route path="/multipleuser" element={<MultipleUser/>}/>
       <Route path="/problemdistributionsingle" element={<ProblemDistributionSingle/>}/>
       <Route path="/problemdistributionmultiple" element={<ProblemDistributionMultiple/>}/>
       <Route path="/ratingdistributionsingle" element={<RatingDistributionSingle/>}/>

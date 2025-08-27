@@ -165,7 +165,7 @@ export function RatingDistributionMultiple() {
       </ResponsiveContainer>
 
       <button
-        onClick={() => navigate("/multipleUser")}
+        onClick={() => navigate("/multipleuser")}
         className="mt-6 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white"
       >
         Back

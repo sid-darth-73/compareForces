@@ -23,7 +23,7 @@ async function getUserInfo(user: string): Promise<UserData | null> {
     const response = await fetch(UserInfoApi({ handle1: user }));
     const data = await response.json();
 
-    if (data.status !== "OK") return null;
+    if(data.status !== "OK") return null;
 
     const result = data.result[0];
 
@@ -49,14 +49,14 @@ export function SingleUser() {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState<UserData | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // NEW loading state
+  const [isLoading, setIsLoading] = useState(true); 
 
   useEffect(() => {
     if (user) {
       Promise.all([
         getUserInfo(user).then(setUserInfo),
         GetUserSubmissions(user).then(setSubmissions),
-      ]).finally(() => setIsLoading(false)); // Mark loading as done
+      ]).finally(() => setIsLoading(false));
     }
   }, [user]);
 

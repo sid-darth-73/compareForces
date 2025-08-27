@@ -101,7 +101,7 @@ export function RatingDistributionSingle() {
         </LineChart>
       </ResponsiveContainer>
       <button
-        onClick={() => navigate("/singleUser")}
+        onClick={() => navigate("/singleuser")}
         className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white"
       >
         Back
