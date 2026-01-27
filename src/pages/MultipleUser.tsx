@@ -1,20 +1,30 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
+
+// Components
 import { Navbar } from "../components/ui/Navbar.tsx";
 import { InfoCard } from "../components/InfoCard.tsx";
 import { UserInfo } from "../components/UserInfo.tsx";
 import { Button } from "../components/ui/Button.tsx";
 import { Badge } from "../components/ui/Badge.tsx";
+
+// APIs
 import { UserInfoApi } from "../api/UserInfoApi.tsx";
 import { GetUserSubmissions, type Submission } from "../api/GetUserSubmissions.ts";
-import { getComparisonResponse } from "../api/getComparisonResponse.ts";
+import { streamComparisonResponse } from "../api/getComparisonResponse.ts"; // Ensure this matches your filename
 
+// Types (Notice the 'type' keyword here to fix your error)
+import type { UserData } from "../types/UserData.ts";
+
+// Sample Data
 import { info1 } from "../assets/SAMPLE_RESPONSE_INFO1.ts";
 import { info2 } from "../assets/SAMPLE_RESPONSE_INFO2.ts";
 import { sub1 } from "../assets/SAMPLE_RESPONSE_SUB1.ts";
 import { sub2 } from "../assets/SAMPLE_RESPONSE_SUB2.ts";
-import { type UserData } from "../types/UserData.ts";
-import ReactMarkdown from "react-markdown";
+
+// --- Helper Functions ---
+
 function mapInfoResponse(data: any): UserData {
   const result = data.result[0];
   return {
@@ -60,34 +70,98 @@ async function getUserSubmissions(user: string): Promise<Submission[]> {
   }
 }
 
+// --- Main Component ---
 
 export function MultipleUser() {
-  const user1 = localStorage.getItem("primaryUser");
-  const user2 = localStorage.getItem("secondaryUser");
+  const user1_handle = localStorage.getItem("primaryUser");
+  const user2_handle = localStorage.getItem("secondaryUser");
   const navigate = useNavigate();
 
+  // User Data State
   const [userInfo1, setUserInfo1] = useState<UserData | null>(null);
   const [userInfo2, setUserInfo2] = useState<UserData | null>(null);
   const [subs1, setSubs1] = useState<Submission[]>([]);
   const [subs2, setSubs2] = useState<Submission[]>([]);
-  const [comparisonText, setComparisonText] = useState<string | null>(null);
-  const [loadingComparison, setLoadingComparison] = useState(false);
-  const [showVerdict, setShowVerdict] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Streaming & Comparison State
+  const [comparisonText, setComparisonText] = useState<string | null>(null);
+  const [showVerdict, setShowVerdict] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  
+  // Real-time updates
+  const [currentStep, setCurrentStep] = useState<string>("");
+  const [currentThought, setCurrentThought] = useState<string>("");
+  const [scores, setScores] = useState({ user1: 0, user2: 0 });
+
+  // Initial Data Load
   useEffect(() => {
-  if (user1 && user2) {
-    Promise.all([
-      getUserInfo(user1).then(setUserInfo1),
-      getUserInfo(user2).then(setUserInfo2),
-      getUserSubmissions(user1).then(setSubs1),
-      getUserSubmissions(user2).then(setSubs2),
-    ]).finally(() => setIsLoading(false));
-  }
-}, [user1, user2]);
+    if (user1_handle && user2_handle) {
+      Promise.all([
+        getUserInfo(user1_handle).then(setUserInfo1),
+        getUserInfo(user2_handle).then(setUserInfo2),
+        getUserSubmissions(user1_handle).then(setSubs1),
+        getUserSubmissions(user2_handle).then(setSubs2),
+      ]).finally(() => setIsLoading(false));
+    }
+  }, [user1_handle, user2_handle]);
 
+  // Helper to extract string content from LangChain message objects
+  const extractContent = (msg: any) => {
+    if (typeof msg === "string") return msg;
+    // Handle LangChain message object structure
+    return msg?.content || "";
+  };
 
-  if (!user1 || !user2)
+  // Handler for Streaming
+  const handleRunComparison = async () => {
+    // 1. Toggle visibility if result exists
+    if (comparisonText && showVerdict) {
+      setShowVerdict(false);
+      return;
+    }
+    if (comparisonText) {
+      setShowVerdict(true);
+      return;
+    }
+
+    // 2. Start New Stream
+    setIsStreaming(true);
+    setShowVerdict(true);
+    setComparisonText(""); // Clear previous text
+    setScores({ user1: 0, user2: 0 }); // Reset scores
+    setCurrentThought("");
+
+    await streamComparisonResponse({
+      user1_handle: user1_handle!,
+      user2_handle: user2_handle!,
+      onUpdate: (data) => {
+        // Update UI with the node currently running and its partial output
+        setCurrentStep(data.node);
+        setCurrentThought(extractContent(data.message));
+        setScores(data.current_scores);
+      },
+      onComplete: (data) => {
+        setIsStreaming(false);
+        // Combine the log into one markdown string or just use the final summary message
+        // Here we join the full log for a detailed verdict
+        const fullLog = data.verdict_log
+          .map((m: any) => extractContent(m))
+          .join("\n\n");
+          
+        setComparisonText(fullLog);
+        setScores({ user1: data.user1_score, user2: data.user2_score });
+      },
+      onError: (err) => {
+        setIsStreaming(false);
+        setComparisonText(`**Error:** ${err}`);
+      },
+    });
+  };
+
+  // --- Render Guards ---
+
+  if (!user1_handle || !user2_handle)
     return <div className="text-white p-4">Error fetching users</div>;
 
   if (isLoading)
@@ -104,12 +178,16 @@ export function MultipleUser() {
       </div>
     );
 
+  // --- Main JSX ---
+
   return (
     <div>
       <Navbar />
       <div className="bg-slate-800 min-h-screen p-4 text-white">
+        
+        {/* Header Section */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-mont">Comparing: {user1} vs {user2}</h1>
+          <h1 className="text-2xl font-mont">Comparing: {user1_handle} vs {user2_handle}</h1>
           <div className="space-x-2">
             <Button
               size="sm"
@@ -127,53 +205,68 @@ export function MultipleUser() {
               size="sm"
               variant="secondary"
               text={
-                loadingComparison
-                  ? "Loading..."
+                isStreaming
+                  ? "Analyzing..."
                   : comparisonText && showVerdict
                   ? "Close Verdict"
                   : "Who is better?"
               }
-              onClick={async () => {
-                if (comparisonText && showVerdict) {
-                  setShowVerdict(false);
-                  return;
-                }
-                if (comparisonText) {
-                  setShowVerdict(true);
-                  return;
-                }
-
-                setLoadingComparison(true);
-                try {
-                  const result = await getComparisonResponse({
-                    user1,
-                    user2,
-                    userInfo1,
-                    userInfo2,
-                  });
-                  setComparisonText(result);
-                  setShowVerdict(true);
-                } catch (err) {
-                  setComparisonText("Oops! Something went wrong generating the comparison.");
-                  setShowVerdict(true);
-                } finally {
-                  setLoadingComparison(false);
-                }
-              }}
+              onClick={handleRunComparison}
+              loading={isStreaming}
             />
           </div>
-
-          {comparisonText && showVerdict && (
-            <div className="mt-8 p-6 bg-slate-700 border border-slate-600 rounded-lg text-white whitespace-pre-line">
-              <h2 className="text-xl font-semibold mb-4">🤖 AI Verdict:</h2>
-              <div className="font-mont">
-                <ReactMarkdown>{comparisonText}</ReactMarkdown>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* user info cards */}
+        {/* --- AI Verdict / Streaming Section --- */}
+        {showVerdict && (
+          <div className="mb-10 p-6 bg-slate-700 border border-slate-600 rounded-lg text-white">
+            
+            {/* Live Scoreboard */}
+            <div className="flex items-center justify-between mb-6 bg-slate-800 p-4 rounded-md border border-slate-600">
+              <div className="text-center w-1/3">
+                <div className="font-bold text-xl text-blue-400">{user1_handle}</div>
+                <div className="text-3xl font-mono">{scores.user1.toFixed(1)}</div>
+              </div>
+              
+              <div className="text-center text-gray-500 font-mont text-sm tracking-widest">
+                VS SCORE
+              </div>
+              
+              <div className="text-center w-1/3">
+                <div className="font-bold text-xl text-green-400">{user2_handle}</div>
+                <div className="text-3xl font-mono">{scores.user2.toFixed(1)}</div>
+              </div>
+            </div>
+
+            {/* Streaming Content */}
+            {isStreaming ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-yellow-400 font-mono text-sm uppercase tracking-wide">
+                  <span className="animate-spin">⚙️</span>
+                  <span>Processing: {currentStep.replace("_", " ")}</span>
+                </div>
+                {/* Current Thought Stream */}
+                <div className="p-4 bg-slate-800 rounded border-l-4 border-yellow-500 font-mono text-sm text-gray-300 min-h-[120px] max-h-[300px] overflow-y-auto">
+                  {currentThought ? (
+                     <ReactMarkdown>{currentThought}</ReactMarkdown>
+                  ) : (
+                    <span className="italic opacity-50">Waiting for model output...</span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Final Verdict */
+              <div>
+                <h2 className="text-xl font-semibold mb-4 text-purple-300">🤖 AI Verdict Log:</h2>
+                <div className="font-mont text-gray-200 prose prose-invert max-w-none">
+                  <ReactMarkdown>{comparisonText || ""}</ReactMarkdown>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* --- User Info Cards --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <div>
             <UserInfo avatar={userInfo1.avatar} rating={userInfo1.rating} rank={userInfo1.rank} />
@@ -196,20 +289,22 @@ export function MultipleUser() {
           </div>
         </div>
 
-        {/* submissions */}
+        {/* --- Submissions --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* User 1 Submissions */}
           <div>
-            <h2 className="text-xl mb-4 font-mont">Recent Submissions: {user1}</h2>
+            <h2 className="text-xl mb-4 font-mont">Recent Submissions: {user1_handle}</h2>
             <ul className="space-y-2">
               {subs1.map((sub) => {
                 let verdictVariant: "default" | "secondary" | "destructive" = "secondary";
-                if (sub.verdict === "ACCEPTED" || sub.verdict==="OK") {
-                  verdictVariant="default"; sub.verdict="ACCEPTED"
-                }
-                else if (
+                if (sub.verdict === "ACCEPTED" || sub.verdict === "OK") {
+                  verdictVariant = "default";
+                  sub.verdict = "ACCEPTED";
+                } else if (
                   ["WRONG_ANSWER", "TIME_LIMIT_EXCEEDED", "COMPILATION_ERROR", "RUNTIME_ERROR"].includes(sub.verdict)
-                )
+                ) {
                   verdictVariant = "destructive";
+                }
 
                 return (
                   <li
@@ -232,18 +327,20 @@ export function MultipleUser() {
             </ul>
           </div>
 
+          {/* User 2 Submissions */}
           <div>
-            <h2 className="text-xl mb-4 font-mont">Recent Submissions: {user2}</h2>
+            <h2 className="text-xl mb-4 font-mont">Recent Submissions: {user2_handle}</h2>
             <ul className="space-y-2">
               {subs2.map((sub) => {
                 let verdictVariant: "default" | "secondary" | "destructive" = "secondary";
-                if (sub.verdict === "ACCEPTED" || sub.verdict==="OK") {
-                  verdictVariant="default"; sub.verdict="ACCEPTED"
-                }
-                else if (
+                if (sub.verdict === "ACCEPTED" || sub.verdict === "OK") {
+                  verdictVariant = "default";
+                  sub.verdict = "ACCEPTED";
+                } else if (
                   ["WRONG_ANSWER", "TIME_LIMIT_EXCEEDED", "COMPILATION_ERROR", "RUNTIME_ERROR"].includes(sub.verdict)
-                )
+                ) {
                   verdictVariant = "destructive";
+                }
 
                 return (
                   <li

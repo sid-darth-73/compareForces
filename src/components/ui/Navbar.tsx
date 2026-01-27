@@ -1,22 +1,7 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Navbar() {
-  
-  const [isWideScreen, setIsWideScreen] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    //setUserName(localStorage.getItem("primaryUser") || "");
-
-    const handleResize = () => {
-
-      setIsWideScreen(()=> window.innerWidth > 768 ? !isWideScreen: isWideScreen);
-    };
-    handleResize(); // initial check
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-slate-900 border-b border-neutral-600">

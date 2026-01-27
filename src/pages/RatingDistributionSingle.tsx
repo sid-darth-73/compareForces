@@ -35,33 +35,66 @@ async function getRatingChanges(handle: string): Promise<Array<{
 export function RatingDistributionSingle() {
   const user = localStorage.getItem("primaryUser");
   const navigate = useNavigate();
-  const [chartData, setChartData] = useState<Array<{
-    contestId: number,
-    contestName: string,
-    oldRating: number,
-    newRating: number,
-    time: number
-  }>>([]);
+  const [chartData, setChartData] = useState<
+    Array<{
+      contestId: number;
+      contestName: string;
+      oldRating: number;
+      newRating: number;
+      time: number;
+    }>
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setError("No user handle found. Please start from the home page.");
+      setIsLoading(false);
+      return;
+    }
 
     getRatingChanges(user)
       .then((ratingData) => {
         setChartData(ratingData);
+        setIsLoading(false);
       })
-      .catch((error) => {
-        console.error("Error fetching rating changes:", error);
+      .catch((err) => {
+        console.error("Error fetching rating changes:", err);
+        setError("Failed to load rating history.");
+        setIsLoading(false);
       });
   }, [user]);
 
-  if (!user) {
-    return <div>No user found</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white text-xl font-mono">
+        Loading rating history...
+      </div>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-4">
+        <div className="bg-slate-800 border border-red-500/60 rounded-xl px-6 py-5 max-w-md w-full text-center shadow">
+          <p className="text-red-300 font-quick text-sm mb-4">
+            {error || "No user found"}
+          </p>
+          <button
+            onClick={() => navigate("/")}
+            className="mt-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white text-sm font-quick"
+          >
+            Go back home
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="p-4 h-screen bg-gray-900 text-white">
-      <Navbar/>
+    <div className="p-4 min-h-screen bg-gray-900 text-white">
+      <Navbar />
       <h1 className="text-xl font-bold mb-4">Rating History for {user}</h1>
       <ResponsiveContainer width="100%" height={400}>
         <LineChart data={chartData}>

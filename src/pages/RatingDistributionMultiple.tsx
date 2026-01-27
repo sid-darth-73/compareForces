@@ -46,10 +46,12 @@ export function RatingDistributionMultiple() {
 
   const [chartData, setChartData] = useState<ChartEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!user1 || !user2) {
       setError("Missing user(s) in localStorage");
+      setIsLoading(false);
       return;
     }
 
@@ -103,11 +105,34 @@ export function RatingDistributionMultiple() {
       .catch((err) => {
         console.error(err);
         setError("Failed to fetch rating data.");
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   }, [user1, user2]);
 
-  if(error) {
-    return <div className="text-red-600 p-4">{error}</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white text-xl font-mono">
+        Loading rating comparison...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-4">
+        <div className="bg-slate-800 border border-red-500/60 rounded-xl px-6 py-5 max-w-md w-full text-center shadow">
+          <p className="text-red-300 font-quick text-sm mb-4">{error}</p>
+          <button
+            onClick={() => navigate("/")}
+            className="mt-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white text-sm font-quick"
+          >
+            Go back home
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

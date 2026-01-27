@@ -91,8 +91,23 @@ export function ProblemDistributionMultiple() {
     });
   };
 
-  if (error) return <div className="p-4 text-red-400 bg-slate-800 min-h-screen">{error}</div>;
-  if (!user1Data || !user2Data) return <div className="p-4 text-white bg-slate-800 min-h-screen">Loading...</div>;
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-4">
+        <div className="bg-slate-800 border border-red-500/60 rounded-xl px-6 py-5 max-w-md w-full text-center shadow">
+          <p className="text-red-300 font-quick text-sm">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user1Data || !user2Data) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white text-xl font-mono">
+        Loading solved problems...
+      </div>
+    );
+  }
 
   const allRatings = Array.from(
     new Set([
