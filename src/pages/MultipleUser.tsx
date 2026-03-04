@@ -18,10 +18,10 @@ import { streamComparisonResponse } from "../api/getComparisonResponse.ts"; // E
 import type { UserData } from "../types/UserData.ts";
 
 // Sample Data
-import { info1 } from "../assets/SAMPLE_RESPONSE_INFO1.ts";
-import { info2 } from "../assets/SAMPLE_RESPONSE_INFO2.ts";
-import { sub1 } from "../assets/SAMPLE_RESPONSE_SUB1.ts";
-import { sub2 } from "../assets/SAMPLE_RESPONSE_SUB2.ts";
+//import { info1 } from "../assets/SAMPLE_RESPONSE_INFO1.ts";
+//import { info2 } from "../assets/SAMPLE_RESPONSE_INFO2.ts";
+//import { sub1 } from "../assets/SAMPLE_RESPONSE_SUB1.ts";
+//import { sub2 } from "../assets/SAMPLE_RESPONSE_SUB2.ts";
 
 // --- Helper Functions ---
 
@@ -43,8 +43,8 @@ function mapInfoResponse(data: any): UserData {
 
 async function getUserInfo(user: string): Promise<UserData | null> {
   // ✅ Use hardcoded fallback for unbit/Clash
-  if (user === "unbit") return mapInfoResponse(info1);
-  if (user === "Clash") return mapInfoResponse(info2);
+  // if (user === "unbit") return mapInfoResponse(info1);
+  // if (user === "Clash") return mapInfoResponse(info2);
 
   try {
     const response = await fetch(UserInfoApi({ handle1: user }));
@@ -58,9 +58,9 @@ async function getUserInfo(user: string): Promise<UserData | null> {
 }
 
 async function getUserSubmissions(user: string): Promise<Submission[]> {
-  // ✅ Use hardcoded fallback
-  if (user === "unbit") return sub1.result;
-  if (user === "Clash") return sub2.result;
+  // // ✅ Use hardcoded fallback
+  // if (user === "unbit") return sub1.result;
+  // if (user === "Clash") return sub2.result;
 
   try {
     return await GetUserSubmissions(user);

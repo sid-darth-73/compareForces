@@ -2,7 +2,7 @@
 export interface StreamUpdatePayload {
   type: "update";
   node: string;
-  message: { content: string; type: string } | string; // LangChain messages usually have content
+  message: string; // LLM messages are strings
   current_scores: {
     user1: number;
     user2: number;
@@ -15,5 +15,5 @@ export interface StreamCompletePayload {
   user2: string;
   user1_score: number;
   user2_score: number;
-  verdict_log: Array<{ content: string }>; // Array of messages
+  verdict_log: string[]; // Array of strings from backend
 }
