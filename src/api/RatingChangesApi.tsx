@@ -1,3 +1,3 @@
 export function RatingChangesApi(handle: string) {
-    return `https://codeforces.com/api/user.rating?handle=${handle}`
+    return `http://localhost:8000/api/user/${handle}/rating`;
 }

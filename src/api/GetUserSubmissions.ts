@@ -12,7 +12,7 @@ export type Submission = {
 
 export async function GetUserSubmissions(user: string): Promise<Submission[]> {
     try {
-        const res = await fetch(`https://codeforces.com/api/user.status?handle=${user}&from=1&count=20`);
+        const res = await fetch(`http://localhost:8000/api/user/${user}/status?from=1&count=20`);
         const data = await res.json();
 
         if (data.status !== "OK") return [];
