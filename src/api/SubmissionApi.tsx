@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "./config";
 export function SubmissionApi(user: string) {
-    return `http://localhost:8000/api/user/${user}/status?from=1`;
+    return `${API_BASE_URL}/api/user/${user}/status?from=1`;
 }

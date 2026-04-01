@@ -9,10 +9,10 @@ export type Submission = {
     programmingLanguage: string;
     verdict: string;
 };
-
+import { API_BASE_URL } from "./config";
 export async function GetUserSubmissions(user: string): Promise<Submission[]> {
     try {
-        const res = await fetch(`http://localhost:8000/api/user/${user}/status?from=1&count=20`);
+        const res = await fetch(`${API_BASE_URL}/api/user/${user}/status?from=1&count=20`);
         const data = await res.json();
 
         if (data.status !== "OK") return [];

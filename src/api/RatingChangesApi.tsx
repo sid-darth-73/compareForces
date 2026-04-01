@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "./config";
 export function RatingChangesApi(handle: string) {
-    return `http://localhost:8000/api/user/${handle}/rating`;
+    return `${API_BASE_URL}/api/user/${handle}/rating`;
 }
