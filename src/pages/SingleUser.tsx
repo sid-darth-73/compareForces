@@ -8,7 +8,7 @@ import { UserInfoApi } from "../api/UserInfoApi.tsx";
 import { GetUserSubmissions, type Submission } from "../api/GetUserSubmissions.ts";
 import { Badge } from "../components/ui/Badge.tsx";
 import { BrainCircuit, Target, Code2, AlertTriangle, TrendingUp } from "lucide-react";
-
+import { API_BASE_URL } from "../api/config.ts";
 type UserData = {
   rating: number;
   maxRating: number;
@@ -48,7 +48,7 @@ async function getUserInfo(user: string): Promise<UserData | null> {
 
 async function getRecommendations(user: string): Promise<RecommendationData | null> {
   try {
-    const response = await fetch(`http://localhost:8000/api/user/${user}/recommendations`);
+    const response = await fetch(`${API_BASE_URL}/api/user/${user}/recommendations`);
     const data = await response.json();
     return data;
   } catch (err) {

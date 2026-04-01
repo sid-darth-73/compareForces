@@ -15,7 +15,7 @@ import { UserInfoApi } from "../api/UserInfoApi.tsx";
 import { GetUserSubmissions, type Submission } from "../api/GetUserSubmissions.ts";
 import { streamComparisonResponse } from "../api/getComparisonResponse.ts";
 import { Target, AlertTriangle, TrendingUp, BrainCircuit } from "lucide-react";
-
+import { API_BASE_URL } from "../api/config.ts";
 type RecommendationData = {
   upsolve_problems: any[];
   tag_recommendations: [string, number][];
@@ -67,7 +67,7 @@ async function getUserSubmissions(user: string): Promise<Submission[]> {
 
 async function getRecommendations(user: string): Promise<RecommendationData | null> {
   try {
-    const response = await fetch(`http://localhost:8000/api/user/${user}/recommendations`);
+    const response = await fetch(`${API_BASE_URL}/api/user/${user}/recommendations`);
     const data = await response.json();
     if (data.detail) return null; // handle error responses
     return data;
