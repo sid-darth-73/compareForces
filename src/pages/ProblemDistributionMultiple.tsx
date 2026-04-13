@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { SubmissionApi } from '../api/SubmissionApi.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Navbar } from '../components/ui/Navbar.tsx';
@@ -56,32 +57,36 @@ async function getSolvedProblemsByRating(handle: string): Promise<UserData> {
 }
 
 export function ProblemDistributionMultiple() {
-  const [user1Data, setUser1Data] = useState<UserData | null>(null);
-  const [user2Data, setUser2Data] = useState<UserData | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [expandedRatings, setExpandedRatings] = useState<Set<number>>(new Set());
-  const [name1, setName1] = useState<string | null>(null)
-  const [name2, setName2] = useState<string | null>(null)
-  useEffect(() => {
-    const user1 = localStorage.getItem('primaryUser');
-    const user2 = localStorage.getItem('secondaryUser');
-    setName1(user1)
-    setName2(user2)
-    if (!user1 || !user2) {
-      setError("Both users must be present in localStorage");
-      return;
-    }
 
-    Promise.all([
-      getSolvedProblemsByRating(user1),
-      getSolvedProblemsByRating(user2),
-    ])
-      .then(([data1, data2]) => {
-        setUser1Data(data1);
-        setUser2Data(data2);
-      })
-      .catch((err) => setError(err.message));
-  }, []);
+  const name1 = localStorage.getItem('primaryUser');
+  const name2 = localStorage.getItem('secondaryUser');
+
+  const {
+    data: user1Data,
+    isLoading: isLoading1,
+    error: error1,
+  } = useQuery({
+    queryKey: ['solvedProblems', name1],
+    queryFn: () => getSolvedProblemsByRating(name1!),
+    enabled: !!name1,  // only run when handle exists
+  });
+
+  const {
+    data: user2Data,
+    isLoading: isLoading2,
+    error: error2,
+  } = useQuery({
+    queryKey: ['solvedProblems', name2],
+    queryFn: () => getSolvedProblemsByRating(name2!),
+    enabled: !!name2,  // only run when handle exists
+  });
+
+  const error = !name1 || !name2
+    ? "Both users must be present in localStorage"
+    : error1 ? (error1 as Error).message
+    : error2 ? (error2 as Error).message
+    : null;
 
   const toggleRating = (rating: number) => {
     setExpandedRatings((prev) => {
@@ -101,13 +106,15 @@ export function ProblemDistributionMultiple() {
     );
   }
 
-  if (!user1Data || !user2Data) {
+  if (isLoading1 || isLoading2) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white text-xl font-mono">
         Loading solved problems...
       </div>
     );
   }
+
+  if (!user1Data || !user2Data) return null;
 
   const allRatings = Array.from(
     new Set([

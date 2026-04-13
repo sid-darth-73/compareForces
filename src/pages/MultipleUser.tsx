@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 
@@ -81,12 +82,38 @@ export function MultipleUser() {
   const user2_handle = localStorage.getItem("secondaryUser");
   const navigate = useNavigate();
 
-  const [userInfo1, setUserInfo1] = useState<UserData | null>(null);
-  const [userInfo2, setUserInfo2] = useState<UserData | null>(null);
-  const [subs1, setSubs1] = useState<Submission[]>([]);
-  const [subs2, setSubs2] = useState<Submission[]>([]);
-  const [recommendations, setRecommendations] = useState<RecommendationData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // --- Cached data queries ---
+  const { data: userInfo1, isLoading: isLoadingInfo1 } = useQuery({
+    queryKey: ['userInfo', user1_handle],
+    queryFn: () => getUserInfo(user1_handle!),
+    enabled: !!user1_handle,
+  });
+
+  const { data: userInfo2, isLoading: isLoadingInfo2 } = useQuery({
+    queryKey: ['userInfo', user2_handle],
+    queryFn: () => getUserInfo(user2_handle!),
+    enabled: !!user2_handle,
+  });
+
+  const { data: subs1 = [] } = useQuery({
+    queryKey: ['submissions', user1_handle],
+    queryFn: () => getUserSubmissions(user1_handle!),
+    enabled: !!user1_handle,
+  });
+
+  const { data: subs2 = [] } = useQuery({
+    queryKey: ['submissions', user2_handle],
+    queryFn: () => getUserSubmissions(user2_handle!),
+    enabled: !!user2_handle,
+  });
+
+  const { data: recommendations } = useQuery({
+    queryKey: ['recommendations', user1_handle],
+    queryFn: () => getRecommendations(user1_handle!),
+    enabled: !!user1_handle,
+  });
+
+  const isLoading = isLoadingInfo1 || isLoadingInfo2;
 
   // Streaming & Comparison State
   const [comparisonText, setComparisonText] = useState<string | null>(null);
@@ -97,18 +124,6 @@ export function MultipleUser() {
   const [currentStep, setCurrentStep] = useState<string>("");
   const [currentThought, setCurrentThought] = useState<string>("");
   const [scores, setScores] = useState({ user1: 0, user2: 0 });
-
-  useEffect(() => {
-    if (user1_handle && user2_handle) {
-      Promise.all([
-        getUserInfo(user1_handle).then(setUserInfo1),
-        getUserInfo(user2_handle).then(setUserInfo2),
-        getUserSubmissions(user1_handle).then(setSubs1),
-        getUserSubmissions(user2_handle).then(setSubs2),
-        getRecommendations(user1_handle).then(setRecommendations),
-      ]).finally(() => setIsLoading(false));
-    }
-  }, [user1_handle, user2_handle]);
 
   const extractContent = (msg: any) => {
     if (typeof msg === "string") return msg;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { RatingChangesApi } from "../api/RatingChangesApi.tsx";
 import { Navbar } from "../components/ui/Navbar.tsx";
@@ -39,77 +39,75 @@ async function getRatingChanges(handle: string): Promise<{ contestName: string; 
     }));
 }
 
+async function fetchMergedRatingData(user1: string, user2: string): Promise<ChartEntry[]> {
+  const [user1Data, user2Data] = await Promise.all([
+    getRatingChanges(user1),
+    getRatingChanges(user2),
+  ]);
+
+  const contestMap: Record<number, ChartEntry> = {};
+
+  for(const c of user1Data) {
+    if(!contestMap[c.time]) {
+      contestMap[c.time] = {
+        index: c.time,
+        contestName: c.contestName,
+      };
+    }
+    contestMap[c.time].user1Rating = c.rating;
+  }
+
+  for(const c of user2Data) {
+    if(!contestMap[c.time]) {
+      contestMap[c.time] = {
+        index: c.time,
+        contestName: c.contestName,
+      };
+    }
+    contestMap[c.time].user2Rating = c.rating;
+  }
+
+  const sorted = Object.values(contestMap).sort((a, b) => a.index - b.index);
+
+  let prevUser1: number | undefined = undefined;
+  let prevUser2: number | undefined = undefined;
+
+  for(const entry of sorted) {
+    if(entry.user1Rating === undefined && prevUser1 !== undefined) {
+      entry.user1Rating = prevUser1;
+    } else if(entry.user1Rating !== undefined) {
+      prevUser1 = entry.user1Rating;
+    }
+
+    if(entry.user2Rating === undefined && prevUser2 !== undefined) {
+      entry.user2Rating = prevUser2;
+    } else if (entry.user2Rating !== undefined) {
+      prevUser2 = entry.user2Rating;
+    }
+  }
+
+  return sorted;
+}
+
 export function RatingDistributionMultiple() {
   const user1 = localStorage.getItem("primaryUser");
   const user2 = localStorage.getItem("secondaryUser");
   const navigate = useNavigate();
 
-  const [chartData, setChartData] = useState<ChartEntry[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    data: chartData = [],
+    error: queryError,
+    isLoading,
+  } = useQuery({
+    queryKey: ['ratingChanges', user1, user2],
+    queryFn: () => fetchMergedRatingData(user1!, user2!),
+    enabled: !!user1 && !!user2,
+  });
 
-  useEffect(() => {
-    if (!user1 || !user2) {
-      setError("Missing user(s) in localStorage");
-      setIsLoading(false);
-      return;
-    }
-
-    Promise.all([getRatingChanges(user1), getRatingChanges(user2)])
-      .then(([user1Data, user2Data]) => {
-        const contestMap: Record<number, ChartEntry> = {};
-
-        for(const c of user1Data) {
-          if(!contestMap[c.time]) {
-            contestMap[c.time] = {
-              index: c.time,
-              contestName: c.contestName,
-            };
-          }
-          contestMap[c.time].user1Rating = c.rating;
-        }
-
-        for(const c of user2Data) {
-          if(!contestMap[c.time]) {
-            contestMap[c.time] = {
-              index: c.time,
-              contestName: c.contestName,
-            };
-          }
-          contestMap[c.time].user2Rating = c.rating;
-        }
-
-
-        const sorted = Object.values(contestMap).sort((a, b) => a.index - b.index);
-
-        // track last known ratings to fill in missing values
-        let prevUser1: number | undefined = undefined;
-        let prevUser2: number | undefined = undefined;
-
-        for(const entry of sorted) {
-          if(entry.user1Rating === undefined && prevUser1 !== undefined) {
-            entry.user1Rating = prevUser1;
-          } else if(entry.user1Rating !== undefined) {
-            prevUser1 = entry.user1Rating;
-          }
-
-          if(entry.user2Rating === undefined && prevUser2 !== undefined) {
-            entry.user2Rating = prevUser2;
-          } else if (entry.user2Rating !== undefined) {
-            prevUser2 = entry.user2Rating;
-          }
-        }
-
-        setChartData(sorted);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError("Failed to fetch rating data.");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, [user1, user2]);
+  const error = !user1 || !user2
+    ? "Missing user(s) in localStorage"
+    : queryError ? (queryError as Error).message
+    : null;
 
   if (isLoading) {
     return (
